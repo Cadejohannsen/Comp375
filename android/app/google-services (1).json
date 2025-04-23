@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "663687544904",
+    "project_id": "flutterclassproject-2e9b3",
+    "storage_bucket": "flutterclassproject-2e9b3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:663687544904:android:f9722884cf102ae62d187d",
+        "android_client_info": {
+          "package_name": "com.example.cadeschessgame"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxysV7NU0FNKL2nme9PcwcC_h2plAuydw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:663687544904:android:42159b85c40c7f412d187d",
+        "android_client_info": {
+          "package_name": "com.example.pratice"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxysV7NU0FNKL2nme9PcwcC_h2plAuydw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
