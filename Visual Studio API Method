@@ -1,0 +1,176 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ProjectBackendPC.Context;
+using ProjectBackendPC.Models;
+
+namespace ProjectBackendPC.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class PopulationController : ControllerBase
+    {
+        private readonly AppDbContext _context;
+
+        public PopulationController(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<PopulationModel>>> GetAllPopulationData()
+        {
+            if (_context.PopulationModels == null)
+            {
+                return NotFound("Population data set not found in database context.");
+            }
+            return await _context.PopulationModels.ToListAsync();
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search(string city)
+        {
+            if (string.IsNullOrWhiteSpace(city))
+                return BadRequest("City name is required");
+
+            try
+            {
+                var results = await _context.PopulationModels
+                    .Where(p => EF.Functions.Like(p.City, $"%{city}%"))
+                    .Select(p => new
+                    {
+                        p.Id,
+                        p.City,
+                        p.Population,
+                        p.StateName
+                    })
+                    .ToListAsync();
+
+                if (!results.Any())
+                {
+                    return NotFound($"No results found for city: {city}");
+                }
+
+                return Ok(results);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while searching: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<PopulationModel>> PostPopulationModel(PopulationModel populationModel)
+        {
+            if (_context.PopulationModels == null)
+            {
+                return Problem("Entity set 'AppDbContext.PopulationModels' is null.");
+            }
+            _context.PopulationModels.Add(populationModel);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetPopulationModel", new { id = populationModel.Id }, populationModel);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<PopulationModel>> GetPopulationModel(int id)
+        {
+            if (_context.PopulationModels == null)
+            {
+                return NotFound();
+            }
+            var populationModel = await _context.PopulationModels.FindAsync(id);
+
+            if (populationModel == null)
+            {
+                return NotFound();
+            }
+
+            return populationModel;
+        }
+
+        [HttpPut("{city}")]
+        public async Task<IActionResult> PutPopulationModel(string city, PopulationModel updatedPopulationModel)
+        {
+            if (string.IsNullOrWhiteSpace(city))
+            {
+                return BadRequest("City name is required for update.");
+            }
+
+            if (_context.PopulationModels == null)
+            {
+                return NotFound("Population data set not found in database context.");
+            }
+
+            var existingModels = await _context.PopulationModels
+                                             .Where(p => p.City == city)
+                                             .ToListAsync();
+
+            if (!existingModels.Any())
+            {
+                return NotFound($"No population data found for city: {city}");
+            }
+
+            // For simplicity, updating the first found record.
+            // If city names are not unique and you need to update a specific one,
+            // you would need a more precise identifier (e.g., City and StateName, or the ID).
+            var modelToUpdate = existingModels.First();
+
+            modelToUpdate.City = updatedPopulationModel.City;
+            modelToUpdate.StateName = updatedPopulationModel.StateName;
+            modelToUpdate.Population = updatedPopulationModel.Population;
+
+            _context.Entry(modelToUpdate).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PopulationModelExists(modelToUpdate.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{city}")]
+        public async Task<IActionResult> DeletePopulationModel(string city)
+        {
+            if (string.IsNullOrWhiteSpace(city))
+            {
+                return BadRequest("City name is required for deletion.");
+            }
+
+            if (_context.PopulationModels == null)
+            {
+                return NotFound("Population data set not found in database context.");
+            }
+
+            var modelsToDelete = await _context.PopulationModels
+                                             .Where(p => p.City == city)
+                                             .ToListAsync();
+
+            if (!modelsToDelete.Any())
+            {
+                return NotFound($"No population data found for city: {city}");
+            }
+
+            _context.PopulationModels.RemoveRange(modelsToDelete);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool PopulationModelExists(int id)
+        {
+            return (_context.PopulationModels?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
+    }
+}
